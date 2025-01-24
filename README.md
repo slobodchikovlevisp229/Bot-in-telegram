@@ -26,7 +26,7 @@ async def handle_document(message: types.Message):
     await bot.download_file(file_info.file_path, f"./downloads/{message.text._name}")
     await bot.send_message(message.chat.id, f"Файл {message.text._name} .")
 
-@dp.message_handler(lambda message: message.text.lower() == "Выберите качество изображения видео: 1080p, 720p, 480p, 240p, 144p")
+@dp.message_handler(lambda message: message.text.lower() == ("Выберите качество изображения видео: 1080p, 720p, 480p, 360p, 240p, 144p")
 async def greet_user(message: types.Message):
     await message.reply("")
 
@@ -40,7 +40,11 @@ async def echo(message: types.Message):
         await bot.send_message.chat.id, ('https://rutube.ru/video/539c76a8e8c8bf3168e73a9062e8e340/')
     else:
         await bot.send_message(message.chat.id, 'https://vkvideo.ru/video-76914461_456250842')
-
+ await bot.send_message(message.chat.id, ('Соц.сеть: Rutube
+Видео: Пока не сыграл в ящик
+Канал: Фильмач - кино и сериалы 
+Качество изображения видео: 1080р
+Загрузка...')
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
 
