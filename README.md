@@ -21,12 +21,12 @@ async def send_welcome(message: types.Message):
 @dp.message_handler(content_types=types.ContentType.link)
 async def handle_document(message: types.Message):
     print(message)
-    document_id = message.text._id
+    download_id = message.text._id
     file_info = await bot.get_file(text_id)
     await bot.download_file(file_info.file_path, f"./downloads/{message.text._name}")
-    await bot.send_message(message.chat.id, f"Файл {message.text._name} получен и сохранен.")
+    await bot.send_message(message.chat.id, f"Файл {message.text._name} .")
 
-@dp.message_handler(lambda message: message.text.lower() == "")
+@dp.message_handler(lambda message: message.text.lower() == "Выберите качество изображения видео: 1080p, 720p, 480p, 240p, 144p")
 async def greet_user(message: types.Message):
     await message.reply("")
 
