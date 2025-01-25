@@ -8,43 +8,136 @@
 Качество изображения видео: 1080р 
 Загрузка... 
 Затем картинка меняется на видео и вместо надписи "Загрузка..." меняется на "ваше видео загружено", а текст выше с информацией о видео не меняется.  
-from aiogram import Bot, Dispatcher, types
-from aiogram.contrib.middlewares.logging import LoggingMiddleware
-from aiogram.utils import executor
-dp = Dispatcher(bot)
-dp.middleware.setup(LoggingMiddleware())
+import logging
+import requests
+from bs4 import BeautifulSoup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, CallbackContext
 
-@dp.message_handler(commands=['start'])
-async def send_welcome(message: types.Message):
-    await bot.send_message(message.chat.id, " Отправьте мне ссылку на видео из VK/Rutube.")
+# Настройка логирования
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-@dp.message_handler(content_types=types.ContentType.link)
-async def handle_document(message: types.Message):
-    print(message)
-    download_id = message.text._id
-    file_info = await bot.get_file(text_id)
-    await bot.download_file(file_info.file_path, f"./downloads/{message.text._name}")
-    await bot.send_message(message.chat.id, f"Файл {message.text._name} .")
+# Функция для обработки команды /start
+def start(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text(
+        "Добро пожаловать в Download Rutube&VK телеграмм-бот! "
+        "Здесь вы сможете скачать видео из VK и Rutube, отправив ссылку на него бесплатно без регистрации и рекламы.\n\n"
+        "Отправьте мне ссылку на видео из VK/Rutube."
+    )
 
-@dp.message_handler(lambda message: message.text.lower() == ("Выберите качество изображения видео: 1080p, 720p, 480p, 360p, 240p, 144p")
-async def greet_user(message: types.Message):
-    await message.reply("")
-
-@dp.message_handler()
-async def echo(message: types.Message):
-    print(message)
-    user_message = message.text.lower()
-    if '' in user_message:
-        await bot.send_message(message.chat.id, 'фильм "Пока не сыграл в ящик"')
-    elif '' in user_message:
-        await bot.send_message.chat.id, ('https://rutube.ru/video/539c76a8e8c8bf3168e73a9062e8e340/')
+# Функция для обработки ссылки на видео
+def handle_video_link(update: Update, context: CallbackContext) -> None:
+    url = update.message.text
+    if "rutube.ru" in url:
+        video_info = get_rutube_video_info(url)
+    elif "vk.com" in url:
+        video_info = get_vk_video_info(url)
     else:
-        await bot.send_message(message.chat.id, 'https://vkvideo.ru/video-76914461_456250842')
- await bot.send_message(message.chat.id, ('Соц.сеть: Rutube
-Видео: Пока не сыграл в ящик
-Канал: Фильмач - кино и сериалы 
-Качество изображения видео: 1080р
-Загрузка...')
+        update.message.reply_text("Пожалуйста, отправьте ссылку на видео из VK или Rutube.")
+        return
+
+    if video_info:
+        keyboard = [
+            [InlineKeyboardButton("1080p", callback_data='1080')],
+            [InlineKeyboardButton("720p", callback_data='720')],
+            [InlineKeyboardButton("480p", callback_data='480')],
+            [InlineKeyboardButton("360p", callback_data='360')],
+            [InlineKeyboardButton("240p", callback_data='240')],
+            [InlineKeyboardButton("144p", callback_data='144')],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_photo(
+            photo=video_info['thumbnail'],
+            caption=f"Соц.сеть: {video_info['platform']}\nВидео: {video_info['title']}\nКанал: {video_info['channel']}",
+            reply_markup=reply_markup
+        )
+        context.user_data['video_info'] = video_info
+    else:
+        update.message.reply_text("Не удалось получить информацию о видео. Пожалуйста, проверьте ссылку.")
+
+# Функция для обработки выбора качества видео
+def handle_quality_selection(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    query.answer()
+    quality = query.data
+    video_info = context.user_data.get('video_info')
+
+    if video_info:
+        query.edit_message_caption(caption=f"{video_info['platform']}\n{video_info['title']}\n{video_info['channel']}\nКачество: {quality}p\nЗагрузка...")
+        video_url = video_info['video_urls'].get(quality)
+        if video_url:
+            query.message.reply_video(video=video_url, caption=f"{video_info['platform']}\n{video_info['title']}\n{video_info['channel']}\nКачество: {quality}p\nВаше видео загружено")
+        else:
+            query.edit_message_caption(caption=f"{video_info['platform']}\n{video_info['title']}\n{video_info['channel']}\nКачество: {quality}p\nОшибка загрузки видео.")
+    else:
+        query.edit_message_caption(caption="Ошибка: информация о видео не найдена.")
+
+# Функция для получения информации о видео с Rutube
+def get_rutube_video_info(url: str) -> dict:
+    try:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        title = soup.find('meta', property='og:title')['content']
+        thumbnail = soup.find('meta', property='og:image')['content']
+        channel = soup.find('meta', property='og:site_name')['content']
+        video_urls = {
+            '1080': soup.find('link', {'type': 'video/mp4', 'data-quality': '1080'})['href'],
+            '720': soup.find('link', {'type': 'video/mp4', 'data-quality': '720'})['href'],
+            '480': soup.find('link', {'type': 'video/mp4', 'data-quality': '480'})['href'],
+            '360': soup.find('link', {'type': 'video/mp4', 'data-quality': '360'})['href'],
+            '240': soup.find('link', {'type': 'video/mp4', 'data-quality': '240'})['href'],
+            '144': soup.find('link', {'type': 'video/mp4', 'data-quality': '144'})['href'],
+        }
+        return {
+            'platform': 'Rutube',
+            'title': title,
+            'channel': channel,
+            'thumbnail': thumbnail,
+            'video_urls': video_urls
+        }
+    except Exception as e:
+        logger.error(f"Error getting Rutube video info: {e}")
+        return None
+
+# Функция для получения информации о видео с VK
+def get_vk_video_info(url: str) -> dict:
+    try:
+        # Здесь должен быть код для получения информации о видео из VK
+        # В реальности это может быть сложнее, так как VK требует авторизации и может блокировать запросы
+        # Для примера возвращаем заглушку
+        return {
+            'platform': 'VK',
+            'title': 'Пример видео',
+            'channel': 'Пример канала',
+            'thumbnail': 'https://example.com/thumbnail.jpg',
+            'video_urls': {
+                '1080': 'https://example.com/video_1080.mp4',
+                '720': 'https://example.com/video_720.mp4',
+                '480': 'https://example.com/video_480.mp4',
+                '360': 'https://example.com/video_360.mp4',
+                '240': 'https://example.com/video_240.mp4',
+                '144': 'https://example.com/video_144.mp4',
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error getting VK video info: {e}")
+        return None
+
+# Основная функция для запуска бота
+def main() -> None:
+    # Вставьте сюда ваш токен
+    updater = Updater("YOUR_TELEGRAM_BOT_TOKEN")
+
+    dispatcher = updater.dispatcher
+
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_video_link))
+    dispatcher.add_handler(CallbackQueryHandler(handle_quality_selection))
+
+    updater.start_polling()
+    updater.idle()
+
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+    main()
 
