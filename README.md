@@ -13,12 +13,10 @@ import requests
 from bs4 import BeautifulSoup
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, CallbackContext
-
-# Настройка логирования
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Функция для обработки команды /start
+start
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         "Добро пожаловать в Download Rutube&VK телеграмм-бот! "
@@ -26,7 +24,7 @@ def start(update: Update, context: CallbackContext) -> None:
         "Отправьте мне ссылку на видео из VK/Rutube."
     )
 
-# Функция для обработки ссылки на видео
+
 def handle_video_link(update: Update, context: CallbackContext) -> None:
     url = update.message.text
     if "rutube.ru" in url:
@@ -56,7 +54,7 @@ def handle_video_link(update: Update, context: CallbackContext) -> None:
     else:
         update.message.reply_text("Не удалось получить информацию о видео. Пожалуйста, проверьте ссылку.")
 
-# Функция для обработки выбора качества видео
+
 def handle_quality_selection(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
@@ -73,7 +71,7 @@ def handle_quality_selection(update: Update, context: CallbackContext) -> None:
     else:
         query.edit_message_caption(caption="Ошибка: информация о видео не найдена.")
 
-# Функция для получения информации о видео с Rutube
+
 def get_rutube_video_info(url: str) -> dict:
     try:
         response = requests.get(url)
@@ -100,12 +98,10 @@ def get_rutube_video_info(url: str) -> dict:
         logger.error(f"Error getting Rutube video info: {e}")
         return None
 
-# Функция для получения информации о видео с VK
+
 def get_vk_video_info(url: str) -> dict:
     try:
-        # Здесь должен быть код для получения информации о видео из VK
-        # В реальности это может быть сложнее, так как VK требует авторизации и может блокировать запросы
-        # Для примера возвращаем заглушку
+   
         return {
             'platform': 'VK',
             'title': 'Пример видео',
@@ -124,7 +120,7 @@ def get_vk_video_info(url: str) -> dict:
         logger.error(f"Error getting VK video info: {e}")
         return None
 
-# Основная функция для запуска бота
+
 def main() -> None:
     # Вставьте сюда ваш токен
     updater = Updater("YOUR_TELEGRAM_BOT_TOKEN")
