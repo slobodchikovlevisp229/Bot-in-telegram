@@ -9,7 +9,6 @@ https://github.com/slobodchikovlevisp229/Bot-in-telegram/edit/main/README.md
 Качество изображения видео: 1080р 
 Загрузка... 
 Затем картинка меняется на видео и вместо надписи "Загрузка..." меняется на "ваше видео загружено", а текст выше с информацией о видео не меняется. 
-
 import logging
 import requests
 from bs4 import BeautifulSoup
@@ -29,7 +28,7 @@ def start(update: Update, context: CallbackContext) -> None:
 
 def handle_video_link(update: Update, context: CallbackContext) -> None:
     url = update.message.text
-    if "rutube.ru" in url:
+    if "rutube.ru" in ur1:
         video_info = get_rutube_video_info(url)
     elif "vk.com" in url:
         video_info = get_vk_video_info(url)
@@ -68,7 +67,7 @@ def handle_video_link(update: Update, context: CallbackContext) -> None:
          else:
             query.edit_message_caption(caption=f"{video_info['platform']}\n{video_info['title']}\n{video_info['channel']}\nКачество: {quality}p\nОшибка загрузки видео.")
     else:
-       
+       query.edit_message_caption
         
         
        
