@@ -1,11 +1,11 @@
 https://github.com/slobodchikovlevisp229/Bot-in-telegram/edit/main/README.md
  # Bot-in-telegram
 Бот в телеграмме, позволяющий скачивать видео, отправив ссылку на видео из ВК и Рутуб бесплатно, без рекламы, без просьб подписаться на другие телеграмм-каналы.
-Открываете Telegram. В поисковой строке вбиваете запрос: Download Rutube&VK. Нажимаете на появившийся бот. Вошли в бот и нажимайте "Начать". Затем высветится окно: Добро пожаловать в Download Rutube&VK телеграмм-бот! Здесь вы сможете скачать видео из VK и Rutube, отправив ссылку на него бесплатно без регистрации и рекламы. Дальше высвечивается сообщение: Отправьте мне ссылку на видео из VK/Rutube. Пользователь отправляет ссылку на видео. Бот обрабатывает ссылку, отправляет обложку видео с кнопками внизу вариантов в каком формате скачать видео: 1080р, 720p, 480p, 360p, 240p, 144p (варианты качества изображения видео). Затем бот отправляет фото (обложку видео) с текстом внизу: Название видео, название канала, формат качества. 
+Открываете Telegram. В поисковой строке вбиваете запрос: Download Rutube&VK. Нажимаете на появившийся бот. Вошли в бот и нажимайте "Начать". Затем высветится окно: Добро пожаловать в Download Rutube&VK телеграмм-бот! Здесь вы сможете скачать видео из VK и Rutube, отправив ссылку на него бесплатно без регистрации и рекламы. Дальше высвечивается сообщение: Отправьте мне ссылку на видео из VK/Rutube. Пользователь отправляет ссылку на видео. Бот обрабатывает ссылку, отправляет обложку видео с кнопками внизу вариантов в каком формате скачать видео: 1080р, 720p, 480p, 360p, 240p, 144p (варианты качества изображения видео). Затем бот отправляет фото (обложку видео) с текстом внизу: Название видео, название канала, формат качества изображения видео. 
 Например:
 Соц.сеть: Rutube
 Видео: Пока не сыграл в ящик
-Канал: Фильмач - кино и сериалы 
+Канал: Фильмач - фильмы и сериалы 
 Качество изображения видео: 1080р 
 Загрузка... 
 Затем картинка меняется на видео и вместо надписи "Загрузка..." меняется на "ваше видео загружено", а текст выше с информацией о видео не меняется. 
@@ -54,5 +54,49 @@ def handle_video_link(update: Update, context: CallbackContext) -> None:
         context.user_data['video_info'] = video_info
     else:
         update.message.reply_text("Не удалось получить информацию о видео. Пожалуйста, проверьте ссылку.")
+        def handle_quality_selection(update: Update, context: CallbackContext) -> None:
+    query = update.callback_query
+    query.answer()
+    quality = query.data
+    video_info = context.user_data.get('video_info')
+        if video_info:
+        query.edit_message_caption(caption=f"{video_info['platform']}\n{video_info['title']}\n{video_info['channel']}\nКачество: {quality}p\nЗагрузка...")
+        video_url = video_info['video_urls'].get(quality)
+        if video_url:
+            query.message.reply_video(video=video_url, caption=f"{video_info['platform']}\n{video_info['title']}\n{video_info['channel']}\nКачество: {quality}p\nВаше видео загружено")
+        else:
+         else:
+            query.edit_message_caption(caption=f"{video_info['platform']}\n{video_info['title']}\n{video_info['channel']}\nКачество: {quality}p\nОшибка загрузки видео.")
+    else:
+        query.edit_message_caption(caption="Ошибка: информация о видео не найдена.")
+        
+        
+        # Функция для получения информации о видео с Rutube
+def get_rutube_video_info(url: str) -> dict:
+    try:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        title = soup.find('meta', property='og:title')['content']
+        thumbnail = soup.find('meta', property='og:image')['content']
+        channel = soup.find('meta', property='og:site_name')['content']
+        video_urls = {
+            '1080': soup.find('link', {'type': 'video/mp4', 'data-quality': '1080'})['href'],
+            '720': soup.find('link', {'type': 'video/mp4', 'data-quality': '720'})['href'],
+            '480': soup.find('link', {'type': 'video/mp4', 'data-quality': '480'})['href'],
+            '360': soup.find('link', {'type': 'video/mp4', 'data-quality': '360'})['href'],
+            '240': soup.find('link', {'type': 'video/mp4', 'data-quality': '240'})['href'],
+            '144': soup.find('link', {'type': 'video/mp4', 'data-quality': '144'})['href'],
+        }
+        return {
+            'platform': 'Rutube',
+            'title': title,
+            'channel': channel,
+            'thumbnail': thumbnail,
+            'video_urls': video_urls
+        }
+    except Exception as e:
+        logger.error(f"Error getting Rutube video info: {e}")
+        
+        
 
 
