@@ -71,31 +71,8 @@ def handle_video_link(update: Update, context: CallbackContext) -> None:
         query.edit_message_caption(caption="Ошибка: информация о видео не найдена.")
         
         
-        # Функция для получения информации о видео с Rutube
-def get_rutube_video_info(url: str) -> dict:
-    try:
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        title = soup.find('meta', property='og:title')['content']
-        thumbnail = soup.find('meta', property='og:image')['content']
-        channel = soup.find('meta', property='og:site_name')['content']
-        video_urls = {
-            '1080': soup.find('link', {'type': 'video/mp4', 'data-quality': '1080'})['href'],
-            '720': soup.find('link', {'type': 'video/mp4', 'data-quality': '720'})['href'],
-            '480': soup.find('link', {'type': 'video/mp4', 'data-quality': '480'})['href'],
-            '360': soup.find('link', {'type': 'video/mp4', 'data-quality': '360'})['href'],
-            '240': soup.find('link', {'type': 'video/mp4', 'data-quality': '240'})['href'],
-            '144': soup.find('link', {'type': 'video/mp4', 'data-quality': '144'})['href'],
-        }
-        return {
-            'platform': 'Rutube',
-            'title': title,
-            'channel': channel,
-            'thumbnail': thumbnail,
-            'video_urls': video_urls
-        }
-    except Exception as e:
-        logger.error(f"Error getting Rutube video info: {e}")
+       
+        
         
         
 
