@@ -68,7 +68,7 @@ def handle_video_link(update: Update, context: CallbackContext) -> None:
          else:
             query.edit_message_caption(caption=f"{video_info['platform']}\n{video_info['title']}\n{video_info['channel']}\nКачество: {quality}p\nОшибка загрузки видео.")
     else:
-        query.edit_message_caption(caption="Ошибка: информация о видео не найдена.")
+       
         
         
        
