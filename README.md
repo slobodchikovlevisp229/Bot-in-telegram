@@ -36,5 +36,23 @@ def handle_video_link(update: Update, context: CallbackContext) -> None:
     else:
         update.message.reply_text("Пожалуйста, отправьте ссылку на видео из VK или Rutube.")
         return
+          if video_info:
+        keyboard = [
+            [InlineKeyboardButton("1080p", callback_data='1080')],
+            [InlineKeyboardButton("720p", callback_data='720')],
+            [InlineKeyboardButton("480p", callback_data='480')],
+            [InlineKeyboardButton("360p", callback_data='360')],
+            [InlineKeyboardButton("240p", callback_data='240')],
+            [InlineKeyboardButton("144p", callback_data='144')],
+        ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_photo(
+            photo=video_info['thumbnail'],
+            caption=f"Соц.сеть: {video_info['platform']}\nВидео: {video_info['title']}\nКанал: {video_info['channel']}",
+            reply_markup=reply_markup
+        )
+        context.user_data['video_info'] = video_info
+    else:
+        update.message.reply_text("Не удалось получить информацию о видео. Пожалуйста, проверьте ссылку.")
 
 
