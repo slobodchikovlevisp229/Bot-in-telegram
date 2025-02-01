@@ -14,10 +14,12 @@ import requests
 from bs4 import BeautifulSoup
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, CallbackContext
+
+# Настройка логирования
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-start
+# Функция для обработки команды /start
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         "Добро пожаловать в Download Rutube&VK телеграмм-бот! "
@@ -25,17 +27,18 @@ def start(update: Update, context: CallbackContext) -> None:
         "Отправьте мне ссылку на видео из VK/Rutube."
     )
 
-
+# Функция для обработки ссылки на видео
 def handle_video_link(update: Update, context: CallbackContext) -> None:
     url = update.message.text
-    if "rutube.ru" in ur1:
+    if "rutube.ru" in url:
         video_info = get_rutube_video_info(url)
     elif "vk.com" in url:
         video_info = get_vk_video_info(url)
     else:
         update.message.reply_text("Пожалуйста, отправьте ссылку на видео из VK или Rutube.")
         return
-          if video_info:
+
+    if video_info:
         keyboard = [
             [InlineKeyboardButton("1080p", callback_data='1080')],
             [InlineKeyboardButton("720p", callback_data='720')],
@@ -53,21 +56,91 @@ def handle_video_link(update: Update, context: CallbackContext) -> None:
         context.user_data['video_info'] = video_info
     else:
         update.message.reply_text("Не удалось получить информацию о видео. Пожалуйста, проверьте ссылку.")
-        def handle_quality_selection(update: Update, context: CallbackContext) -> None:
+
+# Функция для обработки выбора качества видео
+def handle_quality_selection(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
     quality = query.data
     video_info = context.user_data.get('video_info')
-        if video_info:
+
+    if video_info:
         query.edit_message_caption(caption=f"{video_info['platform']}\n{video_info['title']}\n{video_info['channel']}\nКачество: {quality}p\nЗагрузка...")
         video_url = video_info['video_urls'].get(quality)
         if video_url:
             query.message.reply_video(video=video_url, caption=f"{video_info['platform']}\n{video_info['title']}\n{video_info['channel']}\nКачество: {quality}p\nВаше видео загружено")
         else:
-         else:
             query.edit_message_caption(caption=f"{video_info['platform']}\n{video_info['title']}\n{video_info['channel']}\nКачество: {quality}p\nОшибка загрузки видео.")
     else:
-       query.edit_message_caption
+        query.edit_message_caption(caption="Ошибка: информация о видео не найдена.")
+
+# Функция для получения информации о видео с Rutube
+def get_rutube_video_info(url: str) -> dict:
+    try:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        title = soup.find('meta', property='og:title')['content']
+        thumbnail = soup.find('meta', property='og:image')['content']
+        channel = soup.find('meta', property='og:site_name')['content']
+        video_urls = {
+            '1080': soup.find('link', {'type': 'video/mp4', 'data-quality': '1080'})['href'],
+            '720': soup.find('link', {'type': 'video/mp4', 'data-quality': '720'})['href'],
+            '480': soup.find('link', {'type': 'video/mp4', 'data-quality': '480'})['href'],
+            '360': soup.find('link', {'type': 'video/mp4', 'data-quality': '360'})['href'],
+            '240': soup.find('link', {'type': 'video/mp4', 'data-quality': '240'})['href'],
+            '144': soup.find('link', {'type': 'video/mp4', 'data-quality': '144'})['href'],
+        }
+        return {
+            'platform': 'Rutube',
+            'title': title,
+            'channel': channel,
+            'thumbnail': thumbnail,
+            'video_urls': video_urls
+        }
+    except Exception as e:
+        logger.error(f"Error getting Rutube video info: {e}")
+        return None
+
+# Функция для получения информации о видео с VK
+def get_vk_video_info(url: str) -> dict:
+    try:
+        # Здесь должен быть код для получения информации о видео из VK
+        # В реальности это может быть сложнее, так как VK требует авторизации и может блокировать запросы
+        # Для примера возвращаем заглушку
+        return {
+            'platform': 'VK',
+            'title': 'Пример видео',
+            'channel': 'Пример канала',
+            'thumbnail': 'https://example.com/thumbnail.jpg',
+            'video_urls': {
+                '1080': 'https://example.com/video_1080.mp4',
+                '720': 'https://example.com/video_720.mp4',
+                '480': 'https://example.com/video_480.mp4',
+                '360': 'https://example.com/video_360.mp4',
+                '240': 'https://example.com/video_240.mp4',
+                '144': 'https://example.com/video_144.mp4',
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error getting VK video info: {e}")
+        return None
+
+# Основная функция для запуска бота
+def main() -> None:
+    # Вставьте сюда ваш токен
+    updater = Updater("YOUR_TELEGRAM_BOT_TOKEN")
+
+    dispatcher = updater.dispatcher
+
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_video_link))
+    dispatcher.add_handler(CallbackQueryHandler(handle_quality_selection))
+
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
         
         
        
