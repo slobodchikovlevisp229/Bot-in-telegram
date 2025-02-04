@@ -14,20 +14,28 @@ import requests
 from bs4 import BeautifulSoup
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackQueryHandler, CallbackContext
-
-# Настройка логирования
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Функция для обработки команды /start
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text(
         "Добро пожаловать в Download Rutube&VK телеграмм-бот! "
         "Здесь вы сможете скачать видео из VK и Rutube, отправив ссылку на него бесплатно без регистрации и рекламы.\n\n"
         "Отправьте мне ссылку на видео из VK/Rutube."
     )
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
-# Функция для обработки ссылки на видео
+def start(update: Update, context: CallbackContext) -> None:
+    keyboard = [
+        [InlineKeyboardButton("Начать", callback_data='start')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    
+    update.message.reply_text(
+        "Добро пожаловать! Нажмите кнопку ниже, чтобы начать.",
+        reply_markup=reply_markup
+    )
+Функция для обработки ссылки на видео
 def handle_video_link(update: Update, context: CallbackContext) -> None:
     url = update.message.text
     if "rutube.ru" in url:
@@ -56,8 +64,6 @@ def handle_video_link(update: Update, context: CallbackContext) -> None:
         context.user_data['video_info'] = video_info
     else:
         update.message.reply_text("Не удалось получить информацию о видео. Пожалуйста, проверьте ссылку.")
-
-# Функция для обработки выбора качества видео
 def handle_quality_selection(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
@@ -74,7 +80,7 @@ def handle_quality_selection(update: Update, context: CallbackContext) -> None:
     else:
         query.edit_message_caption(caption="Ошибка: информация о видео не найдена.")
 
-# Функция для получения информации о видео с Rutube
+ Функция для получения информации о видео с Rutube
 def get_rutube_video_info(url: str) -> dict:
     try:
         response = requests.get(url)
@@ -92,21 +98,17 @@ def get_rutube_video_info(url: str) -> dict:
         }
         return {
             'platform': 'Rutube',
-            'title': title,
-            'channel': channel,
+            'title': название,
+            'channel': канал,
             'thumbnail': thumbnail,
             'video_urls': video_urls
         }
     except Exception as e:
         logger.error(f"Error getting Rutube video info: {e}")
         return None
-
-# Функция для получения информации о видео с VK
 def get_vk_video_info(url: str) -> dict:
     try:
-        # Здесь должен быть код для получения информации о видео из VK
-        # В реальности это может быть сложнее, так как VK требует авторизации и может блокировать запросы
-        # Для примера возвращаем заглушку
+       
         return {
             'platform': 'VK',
             'title': 'Пример видео',
@@ -124,11 +126,9 @@ def get_vk_video_info(url: str) -> dict:
     except Exception as e:
         logger.error(f"Error getting VK video info: {e}")
         return None
-
-# Основная функция для запуска бота
 def main() -> None:
     # Вставьте сюда ваш токен
-    updater = Updater("YOUR_TELEGRAM_BOT_TOKEN")
+    updater = Updater("8098523642:AAH6b69Zmkwtr-xyh9pPzp9RJ3SYuSRQ5L4")
 
     dispatcher = updater.dispatcher
 
