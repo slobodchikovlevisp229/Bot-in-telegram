@@ -1,7 +1,7 @@
 https://github.com/slobodchikovlevisp229/Bot-in-telegram/edit/main/README.md
  # Bot-in-telegram
 Бот в телеграмме, позволяющий скачивать видео, отправив ссылку на видео из ВК и Рутуб бесплатно, без рекламы, без просьб подписаться на другие телеграмм-каналы.
-Открываете Telegram. В поисковой строке вбиваете запрос: Download Rutube&VK. Нажимаете на появившийся бот. Вошли в бот и нажимайте "Начать". Затем высветится окно: Добро пожаловать в Download Rutube&VK телеграмм-бот! Здесь вы сможете скачать видео из VK и Rutube, отправив ссылку на него бесплатно без регистрации и рекламы. Дальше высвечивается сообщение: Отправьте мне ссылку на видео из VK/Rutube. Пользователь отправляет ссылку на видео. Бот обрабатывает ссылку, отправляет обложку видео с кнопками внизу вариантов в каком формате скачать видео: 1080р, 720p, 480p, 360p, 240p, 144p (варианты качества изображения видео). Затем бот отправляет фото (обложку видео) с текстом внизу: Название видео, название канала, формат качества изображения видео. 
+Открываете Telegram. В поисковой строке вбиваете запрос: Download Rutube&VK. Нажимаете на появившийся бот. Вошли в бот и нажимайте "Start" (Начать). Затем высветится окно: Welcome to Download Rutube&VK Telegram-Bot! Here you can download videos from VK and Rutube, send link free without registration and #AD.  (Добро пожаловать в Download Rutube&VK Телеграмм-бот!) (Здесь вы сможете скачать видео из VK и Rutube, отправив ссылку на него бесплатно без регистрации и рекламы). Дальше высвечивается сообщение: Отправьте мне ссылку на видео из VK/Rutube. Пользователь отправляет ссылку на видео. Бот обрабатывает ссылку, отправляет обложку видео с кнопками внизу вариантов в каком формате скачать видео: 1080р, 720p, 480p, 360p, 240p, 144p (варианты качества изображения видео). Затем бот отправляет фото (обложку видео) с текстом внизу: Название видео, название канала, формат качества изображения видео. 
 Например:
 Соц.сеть: Rutube
 Видео: Пока не сыграл в ящик
@@ -17,25 +17,40 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Callb
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def start(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text(
-        "Добро пожаловать в Download Rutube&VK телеграмм-бот! "
-        "Здесь вы сможете скачать видео из VK и Rutube, отправив ссылку на него бесплатно без регистрации и рекламы.\n\n"
-        "Отправьте мне ссылку на видео из VK/Rutube."
-    )
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext
 
+# Функция для обработки команды /start
 def start(update: Update, context: CallbackContext) -> None:
-    keyboard = [
-        [InlineKeyboardButton("Начать", callback_data='start')]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    update.message.reply_text(
-        "Добро пожаловать! Нажмите кнопку ниже, чтобы начать.",
-        reply_markup=reply_markup
+    # Приветственное сообщение
+    welcome_message = (
+        "Добро пожаловать в Download Rutube&VK телеграмм-бот!\n\n"
+        "Здесь вы сможете скачать видео из VK и Rutube, отправив ссылку на него бесплатно, без регистрации и рекламы.\n\n"
+        "Отправьте мне ссылку на видео из VK или Rutube."
     )
-Функция для обработки ссылки на видео
+    
+    # Отправка сообщения пользователю
+    update.message.reply_text(welcome_message)
+
+# Основная функция для запуска бота
+def main() -> None:
+    # Вставьте сюда ваш токен
+    updater = Updater("8098523642:AAH6b69Zmkwtr-xyh9pPzp9RJ3SYuSRQ5L4")
+
+    # Получаем диспетчер для регистрации обработчиков
+    dispatcher = updater.dispatcher
+
+    # Регистрируем обработчик команды /start
+    dispatcher.add_handler(CommandHandler("start", start))
+
+    # Запускаем бота
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
+    
+# Функция для обработки ссылки на видео
 def handle_video_link(update: Update, context: CallbackContext) -> None:
     url = update.message.text
     if "rutube.ru" in url:
@@ -68,7 +83,7 @@ def handle_quality_selection(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
     quality = query.data
-    video_info = context.user_data.get('video_info')
+    video_info = context.user_data.get('video_info') 
 
     if video_info:
         query.edit_message_caption(caption=f"{video_info['platform']}\n{video_info['title']}\n{video_info['channel']}\nКачество: {quality}p\nЗагрузка...")
@@ -80,10 +95,10 @@ def handle_quality_selection(update: Update, context: CallbackContext) -> None:
     else:
         query.edit_message_caption(caption="Ошибка: информация о видео не найдена.")
 
- Функция для получения информации о видео с Rutube
+ # Функция для получения информации о видео из Rutube
 def get_rutube_video_info(url: str) -> dict:
     try:
-        response = requests.get(url)
+        responce = request (ur1)
         soup = BeautifulSoup(response.text, 'html.parser')
         title = soup.find('meta', property='og:title')['content']
         thumbnail = soup.find('meta', property='og:image')['content']
@@ -98,7 +113,7 @@ def get_rutube_video_info(url: str) -> dict:
         }
         return {
             'platform': 'Rutube',
-            'title': название,
+            'title': название ,
             'channel': канал,
             'thumbnail': thumbnail,
             'video_urls': video_urls
@@ -111,8 +126,8 @@ def get_vk_video_info(url: str) -> dict:
        
         return {
             'platform': 'VK',
-            'title': 'Пример видео',
-            'channel': 'Пример канала',
+            'title': 'название видео',
+            'channel': 'название канала',
             'thumbnail': 'https://example.com/thumbnail.jpg',
             'video_urls': {
                 '1080': 'https://example.com/video_1080.mp4',
